@@ -1,32 +1,27 @@
-// @ts-ignore
-import aposToLexForm from "apos-to-lex-form";
-import { WordTokenizer } from "natural";
-// @ts-ignore
-import SpellCorrector from 'spelling-corrector';
-const { removeStopwords, eng } = require('stopword')
+import express from 'express';
+import cors from 'cors';
+import { getSentiment } from './nlp';
 
-const tokenizer = new WordTokenizer();
-const spellCorrector = new SpellCorrector();
-spellCorrector.loadDictionary();
+const app = express()
 
-function getSentiment(str: string): -1 | 0 | 1 {
-    if (!str.trim()) {
-        return 0;
-    }
 
-    const lexed = aposToLexForm(str).toLowerCase().replace(/[^a-zA-Z\s]+/g, "");
+app.use(express.json())
 
-    const tokenized = tokenizer.tokenize(lexed);
+app.use(
+    cors({
+        origin: 'http/localhost:3000'
+    })
+)
 
-    const fixedSpelling = tokenized.map((word) => spellCorrector.correct(word));
+app.listen(4000, () => console.log('App is running http://localhost:4000'))
 
-    const stopWordsRemoved = removeStopwords(fixedSpelling);
 
-    console.log(stopWordsRemoved);
+app.get('/health', (req, res) => res.send(200));
 
-    return 0;
+app.post('/api/sentiment', (req, res) => {
+    const data = req.body.data
 
-}
+    const sentiment = getSentiment(data)
 
-console.log(getSentiment('This is awesome!'))
-console.log(getSentiment('I have a large dog with many different colours on its coat!'))
+    return res.send({ sentiment });
+})
