@@ -6,6 +6,7 @@ import positive from '/public/positive.svg';
 import negative from '/public/negative.svg';
 import neutral from '/public/neutral.svg';
 import Image from 'next/image'
+import useDebounce from '../useDebounce';
 
 type Sentiment = 1 | 0 | -1
 
@@ -24,6 +25,8 @@ const IndexPage = () => {
   const [comment, setComment] = useState("");
   const [sentiment, setSentiment] = useState<Sentiment>(0);
 
+  const deBouncedComment = useDebounce(comment, 500)
+
   useEffect(() => {
     async function fetchSentiment(comment: string) {
       const result = await axios.post('http://localhost:4000/api/sentiment', {
@@ -33,8 +36,10 @@ const IndexPage = () => {
       setSentiment(result.sentiment)
     }
 
-    fetchSentiment(comment);
-  }, [comment]);
+    if (deBouncedComment) {
+      fetchSentiment(deBouncedComment)
+    }
+  }, [deBouncedComment]);
 
   return (
     <Layout title="Home | Next.js + TypeScript Example">
